@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- Güvenli alan (66dp) içinde kalan belge simgesi -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M34,26h40v56H34z" />
+    <path
+        android:fillColor="#0F3D2E"
+        android:pathData="M42,38h24v5H42z" />
+    <path
+        android:fillColor="#0F3D2E"
+        android:pathData="M42,50h24v5H42z" />
+    <path
+        android:fillColor="#0F3D2E"
+        android:pathData="M42,62h15v5H42z" />
+    <path
+        android:fillColor="#2E7D5B"
+        android:pathData="M42,70h24v5H42z" />
+</vector>

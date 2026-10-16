@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">MetinPDF</string>
+    <string name="app_subtitle">Taranmış PDF → aranabilir metin</string>
+
+    <string name="pick_pdf">PDF seç</string>
+    <string name="no_pdf_selected">Henüz PDF seçilmedi</string>
+    <string name="engine">OCR motoru</string>
+    <string name="engine_tesseract">Tesseract (KillerPDF ile aynı motor)</string>
+    <string name="engine_mlkit">ML Kit (Google, cihaz üstü)</string>
+    <string name="languages">Diller</string>
+    <string name="dpi">Çözünürlük (DPI)</string>
+    <string name="preprocess">Ön işleme (eşikleme + eğim düzeltme)</string>
+    <string name="start">Metne çevir</string>
+    <string name="cancel">Durdur</string>
+    <string name="share_text">Metni paylaş</string>
+    <string name="copy_text">Metni kopyala</string>
+    <string name="save_pdf">Aranabilir PDF kaydet</string>
+    <string name="done">Tamamlandı</string>
+
+    <!-- İşlem hattı ve sonuç ekranı için eklenen anahtarlar -->
+    <string name="extract_text_start">Metni Çıkar</string>
+    <string name="share_pdf">PDF\'i paylaş</string>
+    <string name="engine_tesseract_short">Tesseract</string>
+    <string name="engine_mlkit_short">ML Kit</string>
+    <string name="engine_tesseract_desc">KillerPDF ile aynı motor · Türkçe + İngilizce</string>
+    <string name="engine_mlkit_desc">Google · cihaz üstü</string>
+    <string name="engine_mlkit_warning">ML Kit yalnızca Latin alfabesini destekler; dil seçimi yok sayılır.</string>
+    <string name="languages_value">Türkçe + İngilizce</string>
+    <string name="dpi_value">Çözünürlük: %1$d DPI</string>
+    <string name="preprocess_switch">Ön işleme (eşikleme)</string>
+    <string name="deskew_switch">Eğim düzeltme</string>
+    <string name="write_text_layer_switch">Aranabilir PDF oluştur</string>
+    <string name="progress_page">Sayfa %1$d / %2$d</string>
+    <string name="result_title">Sonuçlar</string>
+    <string name="summary_confidence">Ortalama güven: %1$s</string>
+    <string name="summary_duration">Süre: %1$s sn</string>
+    <string name="page_header">Sayfa %1$d</string>
+    <string name="page_empty">(metin bulunamadı)</string>
+    <string name="default_document_name">belge</string>
+</resources>

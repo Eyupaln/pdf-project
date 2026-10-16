@@ -1,0 +1,63 @@
+MetinPDF
+Copyright (c) 2026 MetinPDF
+
+Bu ürün, aşağıdaki üçüncü taraf yazılımları içerir veya bunlara bağlıdır.
+Tam lisans metinleri licenses/ klasöründedir.
+
+--------------------------------------------------------------------------------
+Apache License 2.0  —  licenses/Apache-2.0.txt
+--------------------------------------------------------------------------------
+  Tesseract4Android 4.9.0               https://github.com/adaptech-cz/Tesseract4Android
+  Tesseract OCR 5.5.1                   https://github.com/tesseract-ocr/tesseract
+  tessdata_best dil modelleri (tur, eng) https://github.com/tesseract-ocr/tessdata_best
+  PDFBox-Android 2.0.27.0               https://github.com/TomRoush/PdfBox-Android
+  Apache PDFBox 2.0.27 (yalnızca test)  https://pdfbox.apache.org/
+  Apache Commons Logging (geçişli)      https://commons.apache.org/proper/commons-logging/
+  AndroidX: core, activity, lifecycle, documentfile
+  Jetpack Compose: UI, Material 3
+  Kotlin, kotlinx.coroutines
+
+--------------------------------------------------------------------------------
+BSD 2-Clause License  —  licenses/Leptonica-BSD-2-Clause.txt
+--------------------------------------------------------------------------------
+  Leptonica 1.85.0                      http://www.leptonica.org/
+
+--------------------------------------------------------------------------------
+Bouncy Castle Licence (MIT benzeri)  —  licenses/BouncyCastle-Licence.html
+--------------------------------------------------------------------------------
+  Bouncy Castle (bcprov / bcpkix / bcutil)
+  PDFBox'un şifreleme desteği için geçişli bağımlılık olarak gelir.
+
+--------------------------------------------------------------------------------
+SIL Open Font License 1.1  —  licenses/NotoSans-OFL.txt
+--------------------------------------------------------------------------------
+  Noto Sans Regular                     https://fonts.google.com/noto
+
+  Üretilen PDF'in görünmez metin katmanında gömülü olarak kullanılır.
+  OFL, fontun belgeye gömülmesine açıkça izin verir. Font dosyası
+  değiştirilmemiştir ve "Noto" ayrılmış adı korunmuştur.
+
+--------------------------------------------------------------------------------
+Google ML Kit Terms of Service  —  https://developers.google.com/ml-kit/terms
+--------------------------------------------------------------------------------
+  ML Kit Text Recognition v2 16.0.1     https://developers.google.com/ml-kit
+
+  NOT: ML Kit, Apache türü bir açık kaynak lisansı altında DEĞİLDİR. Google'ın
+  koşullarına tabidir ve lisans metni bu pakete kopyalanamaz; bağlantısı
+  yukarıdadır. ML Kit, uygulamanın bir parçası olarak dağıtılabilir; ancak
+  içindeki model ve kütüphaneler ayrıştırılıp bağımsız olarak kullanılamaz
+  veya dağıtılamaz.
+
+--------------------------------------------------------------------------------
+Kaynak kodda bulunmayan, Gradle ile indirilen bileşenler
+--------------------------------------------------------------------------------
+Aşağıdakiler bu depoda bulunmaz; derleme sırasında üreticilerin Maven
+depolarından indirilir:
+  - Tesseract4Android, ML Kit, PDFBox-Android, AndroidX, Compose, Kotlin,
+    Bouncy Castle.
+
+Depoda gerçekten dağıtılan üçüncü taraf dosyalar (lisansları yukarıda):
+  - app/src/main/assets/tessdata/tur.traineddata
+  - app/src/main/assets/tessdata/eng.traineddata
+  - app/src/main/assets/fonts/NotoSans-Regular.ttf
+  - licenses/ altındaki lisans ve model README dosyaları

@@ -1,0 +1,94 @@
+MetinPDF — Kurulum, Kullanım ve Test
+====================================
+
+Paket içeriği
+-------------
+  apk\        Kurulmaya hazır APK (MetinPDF-0.1.0-debug.apk)
+  kaynak\     Tam kaynak kod (Gradle projesi)
+  README.md   Proje açıklaması, mimari, kalite gerekçeleri
+  LICENSE     MIT lisansı
+  THIRD-PARTY-NOTICES.md  Kullanılan açık kaynak bileşenler ve lisansları
+
+
+1) KURULUM (telefon)
+---------------------
+  1. apk\MetinPDF-0.1.0-debug.apk dosyasını telefona aktarın
+     (USB kablo, Google Drive, kendinize e-posta/WhatsApp vb.).
+  2. Telefonda dosyayı açın; "Bilinmeyen kaynaklardan yüklemeye izin ver"
+     uyarısını onaylayın ve kurun.
+  3. Uygulama adı: MetinPDF
+     Paket adı:   com.scanpdf.ocr.debug  (debug yapısı)
+
+  İlk açılış: OCR motoru ilk kullanıldığında dil modelleri (~22 MB) uygulamanın
+  özel dizinine kopyalanır; bu bir kez olur ve birkaç saniye sürebilir.
+  Sonraki açılışlar hızlıdır.
+
+  APK yalnızca arm64-v8a + armeabi-v7a mimarilerini içerir (gerçek telefonlar).
+
+
+2) KULLANIM
+-----------
+  - "PDF Seç" ile taranmış PDF'i seçin.
+  - OCR motoru:
+      • Tesseract  — KillerPDF ile aynı motor; modeller: Türkçe + İngilizce
+                     (tessdata_best). Önerilen.
+      • ML Kit     — Google cihaz üstü; yalnızca Latin alfabesi, dil seçimi yok.
+  - Çözünürlük (DPI): 300 önerilir (KillerPDF ile aynı).
+  - Ön işleme (eşikleme): griye çalan / düşük kontrastlı taramalarda açın.
+  - Eğim düzeltme: sayfa hafif eğik taranmışsa açın. Yöntem, döndürme yönünü
+    kendisi doğrular; iyileştirme sağlamazsa görüntüyü değiştirmez.
+  - Aranabilir PDF oluştur: açık bırakın (görünmez metin katmanı yazılır).
+  - "Metni Çıkar" → ilerleme çubuğu → sayfa sayfa metin görünür.
+  - Sonuç ekranı: metni seçip kopyalayabilir, "Metni Paylaş" veya
+    "PDF'i Paylaş" ile dışa aktarabilirsiniz.
+
+  Çıktı dosyaları (uygulama özel dizini):
+     <belge adı>-aranabilir.pdf     görünmez metin katmanlı PDF
+     <belge adı>-metin.txt          düz metin (UTF-8)
+  "Paylaş" düğmeleri bu dosyaları istediğiniz uygulamaya gönderir.
+
+
+3) DOĞRULAMA / TEST
+-------------------
+  A. Aranabilir PDF kontrolü (en önemli test)
+     - Üretilen "<ad>-aranabilir.pdf" dosyasını bilgisayarda açın
+       (Adobe Reader, Chrome, Foxit vb.).
+     - Ctrl+F ile bir kelime arayın (ör. "matematik", "soru", "şekil").
+       Kelime bulunuyorsa metin katmanı doğru yazılmıştır.
+     - Türkçe karakter testi: ş ğ ı İ ö ü ç içeren bir kelimeyi seçip kopyalayın;
+       harfler bozulmadan gelmelidir.
+     - Konum testi: kopyaladığınız metnin, sayfadaki görüntünün üzerine
+       denk gelmesi beklenir (metni bir metin düzenleyiciye yapıştırıp
+       görsel konumla karşılaştırın).
+     - Döndürülmüş sayfa testi: PDF'te /Rotate 90/180/270 olan bir sayfada da
+       arama yapın; metin yine doğru konumda olmalıdır.
+
+  B. Birim testleri (bilgisayarda, cihaz gerekmez)
+       kaynak\ klasöründe:   gradle :app:testDebugUnitTest
+     Rapor: kaynak\app\build\reports\tests\testDebugUnitTest\index.html
+     Kapsam: döndürmeli sayfa koordinat matematiği (gerçek PDFBox çıktısıyla
+     doğrulanan test dâhil), ilerleme oranı, motor seçimi, metin birleştirme.
+
+  C. Cihaz üstü testler (telefon bağlıysa)
+       gradle :app:connectedDebugAndroidTest
+
+
+4) KAYNAKTAN DERLEME
+--------------------
+  Gereksinimler: JDK 17+ (JDK 21 ile doğrulandı), Android SDK
+  (platforms;android-37, build-tools;37.0.0), Gradle 9.8+.
+
+  kaynak\ klasöründe:
+      local.properties  →  sdk.dir=<Android SDK yolu>
+      gradle :app:assembleDebug
+      APK: app\build\outputs\apk\debug\app-debug.apk
+
+
+5) NOTLAR VE SINIRLAR
+---------------------
+  - OCR tek bir arka plan iş parçacığında sıralı çalışır (Tesseract iş parçacığı
+    güvenli değildir); süre sayfa sayısıyla doğrusal artar.
+  - Bellek koruması: rasterize edilen sayfanın uzun kenarı 6000 pikseli aşarsa
+    görüntü küçültülür (etkin DPI düşer).
+  - El yazısı metinlerde doğruluk düşer (Tesseract'ın bilinen sınırı).
+  - Bu paket özel kullanım içindir; dağıtım yapılmaz. Lisans: MIT.
