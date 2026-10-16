@@ -7,41 +7,35 @@ import androidx.core.content.FileProvider
 import java.io.File
 
 /**
- * OCR metnini yerel dosyaya yazar ve paylaşılabilir hâle getirir.
+ * OCR çıktısını yerel dosyaya yazar ve paylaşılabilir hâle getirir.
  *
- * Dosya adları kullanıcıya ait belge adından üretildiği için dosya sistemi
- * açısından tehlikeli karakterler tek bir güvenli biçime indirgenir
- * ([safeFileName]); böylece kaydetme hiçbir zaman ad yüzünden başarısız olmaz.
+ * Ad ve gövde biçimlerini [TextFormat] üretir (saf Kotlin, test edilebilir);
+ * bu nesne yalnızca dosya sistemi ve Android paylaşım ayrıntılarını üstlenir.
+ *
+ * Üretilen dosyalar:
+ *  - `<ad>-metin.txt` — ham metin (UTF-8)
+ *  - `<ad>-metin.md` — markdown (UTF-8)
  */
 object TextExporter {
 
-    /** Android/Linux dosya adlarında sorun çıkaran karakterler ve kontrol karakterleri. */
-    private val ILLEGAL_NAME_CHARS = Regex("[\\\\/:*?\"<>|\\p{Cntrl}]")
-
-    private const val MAX_NAME_LENGTH = 80
-    private const val DEFAULT_NAME = "belge"
     private const val TEXT_SUFFIX = "-metin.txt"
+    private const val MARKDOWN_SUFFIX = "-metin.md"
     private const val FILE_PROVIDER_SUFFIX = ".fileprovider"
 
-    /**
-     * [raw] belge adından dosya sistemi için güvenli bir taban ad üretir.
-     *
-     * Yasak karakterler `_` olur, ad 80 karaktere kısaltılır ve tamamen boş
-     * kalırsa [DEFAULT_NAME] döner.
-     */
-    fun safeFileName(raw: String): String {
-        val cleaned = raw.replace(ILLEGAL_NAME_CHARS, "_").trim().take(MAX_NAME_LENGTH).trim()
-        return cleaned.ifBlank { DEFAULT_NAME }
-    }
+    /** [text]'i `<güvenli ad>-metin.txt` olarak UTF-8 ile yazar ve dosyayı döner. */
+    fun writeText(dir: File, baseName: String, text: String): File =
+        write(dir, baseName, TEXT_SUFFIX, text)
 
-    /**
-     * [text]'i `<safe(baseName)>-metin.txt` olarak UTF-8 kodlamayla yazar ve
-     * yazılan dosyayı döner. [dir] yoksa oluşturulur.
-     */
-    fun writeText(dir: File, baseName: String, text: String): File {
-        if (!dir.exists()) dir.mkdirs()
-        val file = File(dir, safeFileName(baseName) + TEXT_SUFFIX)
-        file.writeText(text, Charsets.UTF_8)
+    /** [markdown]'ı `<güvenli ad>-metin.md` olarak UTF-8 ile yazar ve dosyayı döner. */
+    fun writeMarkdown(dir: File, baseName: String, markdown: String): File =
+        write(dir, baseName, MARKDOWN_SUFFIX, markdown)
+
+    private fun write(dir: File, baseName: String, suffix: String, content: String): File {
+        if (!dir.exists() && !dir.mkdirs()) {
+            throw IllegalStateException("Çıktı dizini oluşturulamadı: ${dir.absolutePath}")
+        }
+        val file = File(dir, TextFormat.safeFileName(baseName) + suffix)
+        file.writeText(content, Charsets.UTF_8)
         return file
     }
 
@@ -49,7 +43,9 @@ object TextExporter {
      * [file]'ı `ACTION_SEND` ile paylaşan bir intent üretir.
      *
      * URI, `res/xml/file_paths.xml` üzerinden tanımlı `FileProvider` ile alınır;
-     * görünüm katmanı bunu `Intent.createChooser` ile gönderebilir.
+     * görünüm katmanı bunu `Intent.createChooser` ile gönderebilir. Paylaşım
+     * menüsü hem kaydetmeyi (Drive/İndirilenler) hem de başka bir uygulamaya
+     * (örneğin bir yapay zekâ sohbetine) göndermeyi mümkün kılar.
      */
     fun shareUri(context: Context, file: File, mime: String): Intent {
         val authority = context.packageName + FILE_PROVIDER_SUFFIX

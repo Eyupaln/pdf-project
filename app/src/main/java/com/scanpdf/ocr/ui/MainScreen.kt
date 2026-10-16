@@ -67,7 +67,8 @@ fun MainScreen(
     onPreprocess: (Boolean) -> Unit,
     onDeskew: (Boolean) -> Unit,
     onWriteTextLayer: (Boolean) -> Unit,
-    onShareText: () -> Unit,
+    onShareTxt: () -> Unit,
+    onShareMd: () -> Unit,
     onSharePdf: () -> Unit,
 ) {
     val context = LocalContext.current
@@ -136,7 +137,7 @@ fun MainScreen(
                 }
             }
             state.outcome?.let { outcome ->
-                item { SummarySection(outcome, onShareText, onSharePdf) }
+                item { SummarySection(outcome, onShareTxt, onShareMd, onSharePdf) }
                 itemsIndexed(
                     items = outcome.pages,
                     key = { _, page -> page.pageIndex },
@@ -308,14 +309,20 @@ private fun ProgressSection(progress: OcrProgress) {
     }
 }
 
-/** Ortalama güven, süre ve paylaşım düğmeleri. */
+/** Ortalama güven, süre ve çıktı dosyası (TXT/MD/PDF) paylaşım düğmeleri. */
 @Composable
-private fun SummarySection(outcome: OcrOutcome, onShareText: () -> Unit, onSharePdf: () -> Unit) {
+private fun SummarySection(
+    outcome: OcrOutcome,
+    onShareTxt: () -> Unit,
+    onShareMd: () -> Unit,
+    onSharePdf: () -> Unit,
+) {
     val meanConfidence = if (outcome.pages.isEmpty()) {
         0f
     } else {
         outcome.pages.map { it.meanConfidence }.average().toFloat()
     }
+    val hasText = outcome.text.isNotBlank()
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Text(stringResource(R.string.result_title), style = MaterialTheme.typography.titleMedium)
         Text(
@@ -326,21 +333,31 @@ private fun SummarySection(outcome: OcrOutcome, onShareText: () -> Unit, onShare
             text = stringResource(R.string.summary_duration, formatSeconds(outcome.elapsedMs / 1000.0)),
             style = MaterialTheme.typography.bodyMedium,
         )
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            modifier = Modifier.fillMaxWidth(),
+        ) {
             Button(
-                onClick = onShareText,
-                enabled = outcome.text.isNotBlank(),
+                onClick = onShareTxt,
+                enabled = hasText,
                 modifier = Modifier.weight(1f),
             ) {
-                Text(stringResource(R.string.share_text))
+                Text(stringResource(R.string.share_txt))
             }
             Button(
-                onClick = onSharePdf,
-                enabled = outcome.outputPdf != null,
+                onClick = onShareMd,
+                enabled = hasText,
                 modifier = Modifier.weight(1f),
             ) {
-                Text(stringResource(R.string.share_pdf))
+                Text(stringResource(R.string.share_md))
             }
+        }
+        Button(
+            onClick = onSharePdf,
+            enabled = outcome.outputPdf != null,
+            modifier = Modifier.fillMaxWidth(),
+        ) {
+            Text(stringResource(R.string.share_pdf))
         }
     }
 }

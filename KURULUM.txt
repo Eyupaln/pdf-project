@@ -3,7 +3,7 @@ MetinPDF — Kurulum, Kullanım ve Test
 
 Paket içeriği
 -------------
-  apk\        Kurulmaya hazır APK (MetinPDF-0.1.0-debug.apk)
+  apk\        Kurulmaya hazır APK (MetinPDF-0.1.1-debug.apk)
   kaynak\     Tam kaynak kod (Gradle projesi)
   README.md   Proje açıklaması, mimari, kalite gerekçeleri
   LICENSE     MIT lisansı
@@ -12,7 +12,7 @@ Paket içeriği
 
 1) KURULUM (telefon)
 ---------------------
-  1. apk\MetinPDF-0.1.0-debug.apk dosyasını telefona aktarın
+  1. apk\MetinPDF-0.1.1-debug.apk dosyasını telefona aktarın
      (USB kablo, Google Drive, kendinize e-posta/WhatsApp vb.).
   2. Telefonda dosyayı açın; "Bilinmeyen kaynaklardan yüklemeye izin ver"
      uyarısını onaylayın ve kurun.
@@ -39,13 +39,23 @@ Paket içeriği
     kendisi doğrular; iyileştirme sağlamazsa görüntüyü değiştirmez.
   - Aranabilir PDF oluştur: açık bırakın (görünmez metin katmanı yazılır).
   - "Metni Çıkar" → ilerleme çubuğu → sayfa sayfa metin görünür.
-  - Sonuç ekranı: metni seçip kopyalayabilir, "Metni Paylaş" veya
-    "PDF'i Paylaş" ile dışa aktarabilirsiniz.
+  - Sonuç ekranı: sayfa metnini seçip kopyalayabilir; üç düğmeyle çıktı
+    dosyalarını indirebilir/paylaşabilirsiniz:
+      • "TXT olarak indir/paylaş"  → <belge adı>-metin.txt
+      • "MD olarak indir/paylaş"   → <belge adı>-metin.md
+      • "PDF'i paylaş"             → <belge adı>-aranabilir.pdf
+    Düğme, Android paylaşım menüsünü açar: dosyayı Drive/İndirilenler'e
+    kaydedebilir veya doğrudan bir uygulamaya (örneğin bir yapay zekâ
+    sohbetine) gönderebilirsiniz.
 
   Çıktı dosyaları (uygulama özel dizini):
      <belge adı>-aranabilir.pdf     görünmez metin katmanlı PDF
-     <belge adı>-metin.txt          düz metin (UTF-8)
-  "Paylaş" düğmeleri bu dosyaları istediğiniz uygulamaya gönderir.
+     <belge adı>-metin.txt          ham düz metin (UTF-8)
+     <belge adı>-metin.md           markdown (UTF-8)
+
+  .txt ve .md aynı metni taşır:  .txt tamamen ham hâldedir, .md ise başına
+  "# <belge adı>" ve her sayfanın başına "## Sayfa N" başlığı ekler. İkisi
+  birlikte üretilir; hangisini isterseniz onu indirirsiniz.
 
 
 3) DOĞRULAMA / TEST
@@ -67,7 +77,8 @@ Paket içeriği
        kaynak\ klasöründe:   gradle :app:testDebugUnitTest
      Rapor: kaynak\app\build\reports\tests\testDebugUnitTest\index.html
      Kapsam: döndürmeli sayfa koordinat matematiği (gerçek PDFBox çıktısıyla
-     doğrulanan test dâhil), ilerleme oranı, motor seçimi, metin birleştirme.
+     doğrulanan test dâhil), ilerleme oranı, motor seçimi, metin birleştirme,
+     .txt/.md çıktı biçimi ve dosya adı güvenliği.
 
   C. Cihaz üstü testler (telefon bağlıysa)
        gradle :app:connectedDebugAndroidTest

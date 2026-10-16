@@ -1,40 +1,40 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">MetinPDF</string>
-    <string name="app_subtitle">Scanned PDF → searchable text</string>
 
+    <!-- Document selection and run -->
     <string name="pick_pdf">Choose PDF</string>
     <string name="no_pdf_selected">No PDF selected yet</string>
-    <string name="engine">OCR engine</string>
-    <string name="engine_tesseract">Tesseract (same engine as KillerPDF)</string>
-    <string name="engine_mlkit">ML Kit (Google, on-device)</string>
-    <string name="languages">Languages</string>
-    <string name="dpi">Resolution (DPI)</string>
-    <string name="preprocess">Preprocessing (binarize + deskew)</string>
-    <string name="start">Convert to text</string>
-    <string name="cancel">Stop</string>
-    <string name="share_text">Share text</string>
-    <string name="copy_text">Copy text</string>
-    <string name="save_pdf">Save searchable PDF</string>
-    <string name="done">Done</string>
-
-    <!-- Keys added for the pipeline and result screen -->
     <string name="extract_text_start">Extract text</string>
-    <string name="share_pdf">Share PDF</string>
+    <string name="cancel">Stop</string>
+
+    <!-- OCR engine -->
+    <string name="engine">OCR engine</string>
     <string name="engine_tesseract_short">Tesseract</string>
     <string name="engine_mlkit_short">ML Kit</string>
     <string name="engine_tesseract_desc">Same engine as KillerPDF · Turkish + English</string>
     <string name="engine_mlkit_desc">Google · on-device</string>
     <string name="engine_mlkit_warning">ML Kit supports Latin script only; language selection is ignored.</string>
     <string name="languages_value">Turkish + English</string>
+
+    <!-- Settings -->
     <string name="dpi_value">Resolution: %1$d DPI</string>
     <string name="preprocess_switch">Preprocessing (binarize)</string>
     <string name="deskew_switch">Deskew</string>
     <string name="write_text_layer_switch">Create searchable PDF</string>
+
+    <!-- Progress -->
     <string name="progress_page">Page %1$d / %2$d</string>
+
+    <!-- Results and output files -->
     <string name="result_title">Results</string>
     <string name="summary_confidence">Average confidence: %1$s</string>
     <string name="summary_duration">Duration: %1$s s</string>
+    <string name="share_txt">Download/share as TXT</string>
+    <string name="share_md">Download/share as MD</string>
+    <string name="share_pdf">Share PDF</string>
+
+    <!-- Page text -->
     <string name="page_header">Page %1$d</string>
     <string name="page_empty">(no text found)</string>
     <string name="default_document_name">document</string>

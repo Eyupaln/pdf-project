@@ -49,6 +49,10 @@ data class OcrOutcome(
     val text: String,
     /** Aranabilir PDF'in yolu; [OcrOptions.writeTextLayer] false ise null. */
     val outputPdf: File?,
+    /** Ham metin (`.txt`) çıktısı; her işte üretilir. */
+    val outputText: File,
+    /** Markdown (`.md`) çıktısı; her işte üretilir. */
+    val outputMarkdown: File,
     val engineKind: OcrEngineKind,
     val elapsedMs: Long,
 )

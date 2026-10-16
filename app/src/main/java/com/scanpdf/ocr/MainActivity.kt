@@ -5,6 +5,7 @@ import android.net.Uri
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.annotation.StringRes
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -21,7 +22,7 @@ import java.io.File
  * Tek ekranlı uygulamanın giriş noktası.
  *
  * Durum ve iş yönetimi [MainViewModel]'de; bu sınıf yalnızca Compose ağacını
- * kurar ve paylaşım intent'lerini başlatır.
+ * kurar ve çıktı dosyalarının paylaşım intent'lerini başlatır.
  */
 class MainActivity : ComponentActivity() {
 
@@ -54,27 +55,36 @@ class MainActivity : ComponentActivity() {
                     onPreprocess = viewModel::setPreprocess,
                     onDeskew = viewModel::setDeskew,
                     onWriteTextLayer = viewModel::setWriteTextLayer,
-                    onShareText = { shareText(state.outcome?.text) },
-                    onSharePdf = { sharePdf(state.outcome?.outputPdf) },
+                    onShareTxt = {
+                        shareFile(state.outcome?.outputText, TEXT_MIME, R.string.share_txt)
+                    },
+                    onShareMd = {
+                        shareFile(state.outcome?.outputMarkdown, MARKDOWN_MIME, R.string.share_md)
+                    },
+                    onSharePdf = {
+                        shareFile(state.outcome?.outputPdf, PDF_MIME, R.string.share_pdf)
+                    },
                 )
             }
         }
     }
 
-    /** Tanınan metni düz metin olarak paylaşır. */
-    private fun shareText(text: String?) {
-        if (text.isNullOrBlank()) return
-        val intent = Intent(Intent.ACTION_SEND).apply {
-            type = "text/plain"
-            putExtra(Intent.EXTRA_TEXT, text)
-        }
-        startActivity(Intent.createChooser(intent, getString(R.string.share_text)))
+    /**
+     * Çıktı dosyasını uygun MIME türüyle paylaşır.
+     *
+     * Paylaşım menüsü hem kaydetmeyi (Drive/İndirilenler) hem de doğrudan başka
+     * uygulamaya göndermeyi sağlar; bu yüzden "indirme" ve "paylaşma" aynı
+     * yoldan yürür.
+     */
+    private fun shareFile(file: File?, mime: String, @StringRes chooserTitle: Int) {
+        if (file == null || !file.exists()) return
+        val intent = TextExporter.shareUri(this, file, mime)
+        startActivity(Intent.createChooser(intent, getString(chooserTitle)))
     }
 
-    /** Üretilen aranabilir PDF'i paylaşır. */
-    private fun sharePdf(file: File?) {
-        if (file == null || !file.exists()) return
-        val intent = TextExporter.shareUri(this, file, "application/pdf")
-        startActivity(Intent.createChooser(intent, getString(R.string.share_pdf)))
+    private companion object {
+        const val TEXT_MIME = "text/plain"
+        const val MARKDOWN_MIME = "text/markdown"
+        const val PDF_MIME = "application/pdf"
     }
 }

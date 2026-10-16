@@ -1,9 +1,11 @@
 package com.scanpdf.ocr.core
 
 import android.graphics.Rect
+import com.scanpdf.ocr.text.TextFormat
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
+import java.io.File
 
 /** İşlem seçenekleri, ilerleme ve motor seçimi davranışları. */
 class PipelineTypesTest {
@@ -72,16 +74,20 @@ class PipelineTypesTest {
     }
 
     @Test
-    fun `sonuc ozeti sayfa metnini ve motoru tasir`() {
+    fun `sonuc ozeti sayfa metnini ve cikti dosyalarini tasir`() {
         val pages = listOf(
             PageOcrResult(0, 10, 10, 300f, listOf(OcrLine(listOf(OcrWord("a", Rect(), 50f)), Rect()))),
         )
+        val textFile = File("deneme-metin.txt")
+        val markdownFile = File("deneme-metin.md")
         val outcome = OcrOutcome(
             documentTitle = "deneme.pdf",
             pageCount = 1,
             pages = pages,
-            text = pages.joinToString("\n\n") { it.text },
+            text = TextFormat.rawText(pages.map { it.text }),
             outputPdf = null,
+            outputText = textFile,
+            outputMarkdown = markdownFile,
             engineKind = OcrEngineKind.TESSERACT,
             elapsedMs = 1234L,
         )
@@ -89,6 +95,8 @@ class PipelineTypesTest {
         assertEquals("deneme.pdf", outcome.documentTitle)
         assertEquals("a", outcome.text)
         assertEquals(null, outcome.outputPdf)
+        assertEquals(textFile, outcome.outputText)
+        assertEquals(markdownFile, outcome.outputMarkdown)
         assertEquals(1234L, outcome.elapsedMs)
     }
 }

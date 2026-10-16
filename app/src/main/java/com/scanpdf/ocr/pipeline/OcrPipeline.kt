@@ -3,6 +3,7 @@ package com.scanpdf.ocr.pipeline
 import android.content.Context
 import android.graphics.Bitmap
 import android.net.Uri
+import com.scanpdf.ocr.R
 import com.scanpdf.ocr.core.OcrEngine
 import com.scanpdf.ocr.core.OcrOptions
 import com.scanpdf.ocr.core.OcrOutcome
@@ -14,6 +15,7 @@ import com.scanpdf.ocr.pdf.PdfFontProvider
 import com.scanpdf.ocr.pdf.PdfRasterizer
 import com.scanpdf.ocr.pdf.PdfTextLayerWriter
 import com.scanpdf.ocr.text.TextExporter
+import com.scanpdf.ocr.text.TextFormat
 import com.tom_roush.pdfbox.pdmodel.PDDocument
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.NonCancellable
@@ -24,7 +26,7 @@ import java.io.File
 import java.io.IOException
 
 /**
- * PDF → OCR → aranabilir PDF / düz metin işlem hattı.
+ * PDF → OCR → aranabilir PDF / ham metin (.txt) / markdown (.md) işlem hattı.
  *
  * Tüm ağır iş (rasterize, ön işleme, OCR) [Dispatchers.Default] üzerinde koşar;
  * yalnızca dosya girdi/çıktısı [Dispatchers.IO]'ya devredilir. [run] askıya
@@ -73,12 +75,14 @@ class OcrPipeline(private val context: Context) {
                 results += recognizePage(pageIndex, pageCount, rasterizer, activeEngine, options, onProgress)
             }
 
-            val fullText = results.joinToString("\n\n") { it.text }
+            // Sayfa metinleri iki biçimde kullanılır: `.txt` ham, `.md` başlıklı.
+            val pageTexts = results.map { it.text }
+            val fullText = TextFormat.rawText(pageTexts)
 
             // 4) Aranabilir PDF (görünmez metin katmanı) üret.
             val outputPdf: File? = if (options.writeTextLayer) {
                 onProgress(OcrProgress(OcrStage.WRITING, pageCount, pageCount, "Aranabilir PDF yazılıyor"))
-                val target = File(directory, TextExporter.safeFileName(displayName) + "-aranabilir.pdf")
+                val target = File(directory, TextFormat.safeFileName(displayName) + "-aranabilir.pdf")
                 withContext(Dispatchers.IO) {
                     val writer = PdfTextLayerWriter(doc, PdfFontProvider(context))
                     writer.writeAll(results)
@@ -89,9 +93,16 @@ class OcrPipeline(private val context: Context) {
                 null
             }
 
-            // 5) Düz metni de `.txt` olarak kaydet (paylaşım ve arşiv için).
+            // 5) Çıktı dosyaları: ham metin (`.txt`) ve markdown (`.md`).
+            //    İkisi birlikte yazılır; kullanıcı sonuç ekranından istediğini indirir.
             onProgress(OcrProgress(OcrStage.SAVING, pageCount, pageCount, "Metin kaydediliyor"))
-            withContext(Dispatchers.IO) { TextExporter.writeText(directory, displayName, fullText) }
+            val markdown = TextFormat.markdownText(displayName, pageTexts) { page ->
+                context.getString(R.string.page_header, page)
+            }
+            val (textFile, markdownFile) = withContext(Dispatchers.IO) {
+                TextExporter.writeText(directory, displayName, fullText) to
+                    TextExporter.writeMarkdown(directory, displayName, markdown)
+            }
 
             // 6) Bitti.
             onProgress(OcrProgress(OcrStage.DONE, pageCount, pageCount))
@@ -101,6 +112,8 @@ class OcrPipeline(private val context: Context) {
                 pages = results,
                 text = fullText,
                 outputPdf = outputPdf,
+                outputText = textFile,
+                outputMarkdown = markdownFile,
                 engineKind = options.engine,
                 elapsedMs = System.currentTimeMillis() - startedAt,
             )

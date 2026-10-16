@@ -18,9 +18,15 @@ yalnızca davranış referansı olarak incelenmiştir (bkz.
 1. Seçilen PDF'in her sayfasını **300 DPI**'da görüntüye çevirir (PDFBox).
 2. İsteğe bağlı **ön işleme**: Sauvola eşikleme, kendini doğrulayan eğim düzeltme.
 3. **OCR**: Tesseract (`tessdata_best`, `tur` + `eng`) veya ML Kit (cihaz üstü).
-4. Sayfa metnini gösterir; **kopyalanabilir** ve **paylaşılabilir**.
-5. Orijinal sayfanın üzerine **görünmez metin katmanı** yazıp **aranabilir PDF**
-   üretir (`<ad>-aranabilir.pdf`) ve düz metni `<ad>-metin.txt` olarak kaydeder.
+4. Sayfa metnini gösterir; **seçilebilir/kopyalanabilir** ve dosya olarak
+   **indirilebilir/paylaşılabilir**.
+5. Üç çıktı üretir:
+   - `<ad>-aranabilir.pdf` — orijinal sayfanın üzerine **görünmez metin katmanı**
+     yazılmış aranabilir PDF,
+   - `<ad>-metin.txt` — sayfa metinleri **ham** hâlde (aralarında bir boş satır,
+     hiçbir başlık yok); bir yapay zekâ sohbetine doğrudan verilebilir,
+   - `<ad>-metin.md` — aynı metin, `# belge adı` ve `## Sayfa N` başlıklarıyla
+     (sayfa sınırları görünür olur; metnin kendisi değişmez).
 
 ## Kalite neden "gerçek"
 
@@ -42,7 +48,7 @@ app/src/main/java/com/scanpdf/ocr/
 ├── pdf/         PdfRasterizer, PdfFontProvider, PdfTextLayerWriter, PageGeometry
 ├── image/       ImagePreprocessor (Leptonica: eşikleme, eğim)
 ├── pipeline/    OcrPipeline (rasterize → ön işleme → OCR → metin katmanı)
-├── text/        TextExporter (dosya adı, .txt, paylaşım)
+├── text/        TextFormat (ad, .txt/.md gövdesi), TextExporter (yazma, paylaşım)
 └── ui/          MainScreen, MainViewModel (Compose)
 ```
 
@@ -98,6 +104,9 @@ JVM testleri şunları kapsar:
   sayfa çizilir, PDFBox ile görüntülenir ve mürekkebin piksel konumu öngörüyle
   karşılaştırılır (testte masaüstü PDFBox kullanılır; uygulamadaki
   pdfbox-android onun portudur).
+- `TextFormatTest` — çıktı biçimleri: `.txt` ve `.md` gövdeleri tam metin
+  karşılaştırmasıyla sabitlenir; dosya adı güvenliği (yasak karakterler, uzunluk
+  sınırı, boş ad), sayfa başlıkları, sayfa numarası sırası.
 - `PipelineTypesTest`, `ModelsTest` — seçenekler, ilerleme oranı, motor seçimi,
   metin birleştirme, güven ortalaması.
 
