@@ -37,6 +37,11 @@ Paket içeriği
   - Ön işleme (eşikleme): griye çalan / düşük kontrastlı taramalarda açın.
   - Eğim düzeltme: sayfa hafif eğik taranmışsa açın. Yöntem, döndürme yönünü
     kendisi doğrular; iyileştirme sağlamazsa görüntüyü değiştirmez.
+  - Düzen: "Otomatik" bırakın. Tablo/ızgara içeren sayfa (örn. cevap anahtarı)
+    algılanırsa sayfa tek blok modunda yeniden okunur ve daha çok içerik veren
+    sonuç korunur. "Tablo" seçilirse her sayfa bu modda okunur.
+  - Koyu zeminli bantlar (koyu başlık şeridi, beyaz yazı) bu sürümde otomatik
+    olarak yerinde ters çevrilir; bunun için bir ayar gerekmez.
   - Aranabilir PDF oluştur: açık bırakın (görünmez metin katmanı yazılır).
   - "Metni Çıkar" → ilerleme çubuğu → sayfa sayfa metin görünür.
   - Sonuç ekranı: sayfa metnini seçip kopyalayabilir; üç düğmeyle çıktı
@@ -54,8 +59,10 @@ Paket içeriği
      <belge adı>-metin.md           markdown (UTF-8)
 
   .txt ve .md aynı metni taşır:  .txt tamamen ham hâldedir, .md ise başına
-  "# <belge adı>" ve her sayfanın başına "## Sayfa N" başlığı ekler. İkisi
-  birlikte üretilir; hangisini isterseniz onu indirirsiniz.
+  "# <belge adı>" ve her sayfanın başına "## Sayfa N" başlığı ekler. Tablo
+  sayfalarında .md, hücreleri gerçek markdown tablosu (| ... |) olarak verir;
+  .txt tabloyu satır satır ham metin olarak verir. İkisi birlikte üretilir;
+  hangisini isterseniz onu indirirsiniz.
 
 
 3) DOĞRULAMA / TEST

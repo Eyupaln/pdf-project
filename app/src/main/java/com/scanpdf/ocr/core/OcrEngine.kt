@@ -28,8 +28,18 @@ interface OcrEngine : AutoCloseable {
     /** Verilen dilleri hazırlar (model kurulumu vb.). Birden çok kez çağrılabilir. */
     fun prepare(languages: List<String>)
 
-    /** Tek bir sayfa görüntüsünü çözer. */
-    fun recognize(pageIndex: Int, bitmap: Bitmap, renderDpi: Float): PageOcrResult
+    /**
+     * Tek bir sayfa görüntüsünü çözer.
+     *
+     * [layout] motorun sayfa bölütleme tercihidir. Motor desteklemiyorsa
+     * (örneğin ML Kit) yok sayılır; bu yüzden varsayılanı vardır.
+     */
+    fun recognize(
+        pageIndex: Int,
+        bitmap: Bitmap,
+        renderDpi: Float,
+        layout: PageLayout = PageLayout.AUTO,
+    ): PageOcrResult
 
     companion object {
         fun create(context: Context, kind: OcrEngineKind): OcrEngine = when (kind) {

@@ -66,12 +66,12 @@ class PdfTextLayerWriter(
                     if (text.isEmpty()) continue
 
                     val box = word.box
-                    if (box.width() <= 0 || box.height() <= 0) continue
+                    if (!box.isValid) continue
 
                     val dx = box.left * kx
                     val dy = box.bottom * ky // taban çizgisi = kutunun altı
                     val anchor = PageGeometry.anchor(dx, dy, w, h, rotation)
-                    val size = (box.height() * ky).toFloat().coerceAtLeast(MIN_FONT_SIZE)
+                    val size = (box.height * ky).toFloat().coerceAtLeast(MIN_FONT_SIZE)
 
                     try {
                         if (size != currentSize) {

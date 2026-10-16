@@ -17,6 +17,12 @@
     <string name="engine_mlkit_warning">ML Kit yalnızca Latin alfabesini destekler; dil seçimi yok sayılır.</string>
     <string name="languages_value">Türkçe + İngilizce</string>
 
+    <!-- Sayfa düzeni (bölütleme) -->
+    <string name="layout_label">Sayfa düzeni</string>
+    <string name="layout_auto">Otomatik</string>
+    <string name="layout_table">Tablo</string>
+    <string name="layout_desc">Otomatik: tablo gibi görünen sayfalar tek blok hâlinde yeniden okunur. Tablo: ızgara sayfalarını zorla tek blok oku.</string>
+
     <!-- Ayarlar -->
     <string name="dpi_value">Çözünürlük: %1$d DPI</string>
     <string name="preprocess_switch">Ön işleme (eşikleme)</string>
@@ -25,6 +31,7 @@
 
     <!-- İlerleme -->
     <string name="progress_page">Sayfa %1$d / %2$d</string>
+    <string name="progress_table_retry">Tablo düzeni yeniden deneniyor</string>
 
     <!-- Sonuçlar ve çıktı dosyaları -->
     <string name="result_title">Sonuçlar</string>

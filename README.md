@@ -17,38 +17,44 @@ yalnızca davranış referansı olarak incelenmiştir (bkz.
 
 1. Seçilen PDF'in her sayfasını **300 DPI**'da görüntüye çevirir (PDFBox).
 2. İsteğe bağlı **ön işleme**: Sauvola eşikleme, kendini doğrulayan eğim düzeltme.
-3. **OCR**: Tesseract (`tessdata_best`, `tur` + `eng`) veya ML Kit (cihaz üstü).
-4. Sayfa metnini gösterir; **seçilebilir/kopyalanabilir** ve dosya olarak
+3. **Polarite normalizasyonu**: koyu zeminli bantlar (ör. cevap anahtarı başlıkları)
+   yerinde ters çevrilir; aksi hâlde Tesseract polarite kararını tüm sayfa için
+   verdiği için bant içeriği tamamen kaybolur.
+4. **OCR**: Tesseract (`tessdata_best`, `tur` + `eng`) veya ML Kit (cihaz üstü).
+   Tablo/ızgara sayfaları otomatik algılanıp tek blok modunda yeniden okunur.
+5. Sayfa metnini gösterir; **seçilebilir/kopyalanabilir** ve dosya olarak
    **indirilebilir/paylaşılabilir**.
-5. Üç çıktı üretir:
+6. Üç çıktı üretir:
    - `<ad>-aranabilir.pdf` — orijinal sayfanın üzerine **görünmez metin katmanı**
      yazılmış aranabilir PDF,
    - `<ad>-metin.txt` — sayfa metinleri **ham** hâlde (aralarında bir boş satır,
      hiçbir başlık yok); bir yapay zekâ sohbetine doğrudan verilebilir,
-   - `<ad>-metin.md` — aynı metin, `# belge adı` ve `## Sayfa N` başlıklarıyla
-     (sayfa sınırları görünür olur; metnin kendisi değişmez).
+   - `<ad>-metin.md` — `# belge adı` ve `## Sayfa N` başlıkları; **tablolar gerçek
+     markdown tablosuna** çevrilir (düz metinde hücre-sütun ilişkisi kaybolur).
 
 ## Kalite neden "gerçek"
 
-Kalite tek bir sihirli ayardan gelmez; dördü birlikte gerekir:
+Kalite tek bir sihirli ayardan gelmez; bunlar birlikte gerekir:
 
 | Etken | Uygulama |
 |---|---|
 | **Model** | `tessdata_best` — KillerPDF'in kullandığı modellerin aynısı |
 | **Çözünürlük** | 300 DPI rasterize; Tesseract'a `user_defined_dpi` açıkça bildirilir (aksi halde 70 DPI varsayıp kalite çöker) |
 | **Ön işleme** | Sauvola eşikleme + yönü doğrulanan eğim düzeltme |
+| **Polarite** | Koyu zeminli bantlar yerinde ters çevrilir (koyu zemin + beyaz yazı, Tesseract'ta o satırları tamamen düşürür) |
+| **Bölütleme** | Tablo/ızgara sayfaları otomatik algılanır ve tek blok modunda yeniden okunur (varsayılan mod ızgara satırlarının bir bölümünü düşürür) |
 | **Metin katmanı** | Kelime kutuları sayfa `/Rotate` değerine (0/90/180/270) göre sayfa uzayına eşlenir; Unicode TrueType gömülür (Standart-14 fontlar `ş ğ ı İ` yazamaz) |
 
 ## Proje yapısı
 
 ```
 app/src/main/java/com/scanpdf/ocr/
-├── core/        Modeller ve sözleşmeler (OcrEngine, OcrOptions, PageOcrResult)
+├── core/        Modeller ve sözleşmeler (Box, OcrEngine, OcrOptions/PageLayout, PageOcrResult)
 ├── engine/      tesseract/ (TessdataInstaller, TesseractEngine), mlkit/
 ├── pdf/         PdfRasterizer, PdfFontProvider, PdfTextLayerWriter, PageGeometry
-├── image/       ImagePreprocessor (Leptonica: eşikleme, eğim)
-├── pipeline/    OcrPipeline (rasterize → ön işleme → OCR → metin katmanı)
-├── text/        TextFormat (ad, .txt/.md gövdesi), TextExporter (yazma, paylaşım)
+├── image/       ImagePreprocessor (Leptonica: eşikleme, eğim), PolarityBands (koyu bant tespiti)
+├── pipeline/    OcrPipeline (rasterize → ön işleme → polarite → OCR → metin katmanı)
+├── text/        TextFormat (ad, .txt/.md gövdesi), WordLayout (tablo yapısı), TextExporter
 └── ui/          MainScreen, MainViewModel (Compose)
 ```
 
@@ -106,7 +112,15 @@ JVM testleri şunları kapsar:
   pdfbox-android onun portudur).
 - `TextFormatTest` — çıktı biçimleri: `.txt` ve `.md` gövdeleri tam metin
   karşılaştırmasıyla sabitlenir; dosya adı güvenliği (yasak karakterler, uzunluk
-  sınırı, boş ad), sayfa başlıkları, sayfa numarası sırası.
+  sınırı, boş ad), sayfa başlıkları, sayfa numarası sırası, tablo → markdown tablosu.
+- `WordLayoutTest` — tablo yapısı: hücre ayırma eşiği, ızgara satırı tespiti,
+  seçenek satırının tablo sayılmaması, tablo bloğu sütun doldurma.
+- `PolarityBandsTest` — koyu bant tespiti ve yerinde ters çevirme (alfa korunur).
+- `TableRecognitionTest` — **gerçek Tesseract ile kanıt** (Tess4J + uygulamanın
+  `assets/tessdata` modelleri): cevap anahtarı sayfasının benzeri üretilir; koyu
+  bantlı hâlde numara satırı okunamaz, polarite normalizasyonundan sonra cevap
+  harfleri ve numara kuyruğu okunur ve markdown tablosu üretilir.
+- `BoxTest` — saf geometri: ölçüler, örtüşme, birleşim, döndürme.
 - `PipelineTypesTest`, `ModelsTest` — seçenekler, ilerleme oranı, motor seçimi,
   metin birleştirme, güven ortalaması.
 

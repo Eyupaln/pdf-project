@@ -88,12 +88,12 @@ class TextFormatTest {
 
     @Test
     fun `md basligi ve tek sayfa metnini yazar`() {
-        assertEquals("# Belge\n\nmetin\n", TextFormat.markdownText("Belge", listOf("metin")))
+        assertEquals("# Belge\n\nmetin\n", TextFormat.markdownText("Belge", listOf(pageOfText("metin"))))
     }
 
     @Test
     fun `md tek sayfada sayfa basligi eklemez`() {
-        val md = TextFormat.markdownText("Belge", listOf("metin"))
+        val md = TextFormat.markdownText("Belge", listOf(pageOfText("metin")))
         assertFalse(md.contains("## "))
     }
 
@@ -101,13 +101,13 @@ class TextFormatTest {
     fun `md cok sayfada numarali baslik ekler`() {
         assertEquals(
             "# Belge\n\n## Sayfa 1\n\nilk\n\n## Sayfa 2\n\nikinci\n",
-            TextFormat.markdownText("Belge", listOf("ilk", "ikinci")),
+            TextFormat.markdownText("Belge", listOf(pageOfText("ilk"), pageOfText("ikinci"))),
         )
     }
 
     @Test
     fun `md sayfa etiketi disaridan verilebilir`() {
-        val md = TextFormat.markdownText("Belge", listOf("a", "b")) { "Page $it" }
+        val md = TextFormat.markdownText("Belge", listOf(pageOfText("a"), pageOfText("b"))) { "Page $it" }
         assertTrue(md.contains("## Page 1"))
         assertTrue(md.contains("## Page 2"))
         assertFalse(md.contains("Sayfa"))
@@ -115,21 +115,22 @@ class TextFormatTest {
 
     @Test
     fun `md sayfa numaralari birden baslar`() {
-        val md = TextFormat.markdownText("B", listOf("a", "b", "c"))
+        val md = TextFormat.markdownText("B", listOf(pageOfText("a"), pageOfText("b"), pageOfText("c")))
         assertTrue(md.indexOf("## Sayfa 1") < md.indexOf("## Sayfa 2"))
         assertTrue(md.indexOf("## Sayfa 2") < md.indexOf("## Sayfa 3"))
     }
 
     @Test
     fun `md cok satirli basligi tek satira indirir`() {
-        val md = TextFormat.markdownText("A\nB", listOf("x"))
+        val md = TextFormat.markdownText("A\nB", listOf(pageOfText("x")))
         assertTrue(md, md.startsWith("# A B\n"))
     }
 
     @Test
-    fun `md sayfa metnini degistirmez`() {
-        val sayfa = "  girinti korunur\n\nve boş satırlar  "
-        val md = TextFormat.markdownText("Belge", listOf(sayfa))
+    fun `md sayfa satirlarini degistirmez`() {
+        val page = pageOfText("girinti korunur", "ve boş satırlar")
+        val md = TextFormat.markdownText("Belge", listOf(page))
+
         assertTrue(md.contains("girinti korunur"))
         assertTrue(md.contains("ve boş satırlar"))
     }
@@ -137,5 +138,42 @@ class TextFormatTest {
     @Test
     fun `md sayfa yoksa yalnizca baslik yazar`() {
         assertEquals("# Belge\n", TextFormat.markdownText("Belge", emptyList()))
+    }
+
+    @Test
+    fun `md cevap anahtari tablosunu markdown tablosu yapar`() {
+        val answers = listOf("C", "C", "E", "B", "C", "A", "E", "C", "E", "A", "C", "A", "E", "E", "D", "B", "C", "D")
+        val page = pageOfLines(
+            textLine("CEVAP ANAHTARI", top = 0),
+            gridLine((1..18).map { it.toString() }, top = 60),
+            gridLine(answers, top = 140),
+        )
+
+        val md = TextFormat.markdownText("Belge", listOf(page))
+
+        // Başlık düz satır olarak kalır.
+        assertTrue(md, md.contains("CEVAP ANAHTARI"))
+        // Izgara satırları markdown tablosuna dönüşür.
+        assertEquals((1..18).map { it.toString() }, markdownRow(md, firstCell = "1"))
+        assertEquals(answers, markdownRow(md, firstCell = "C"))
+        assertTrue(md, md.lines().any { it.startsWith("| ---") })
+    }
+
+    @Test
+    fun `txt tablo satirlarini ham birakir`() {
+        val page = pageOfLines(
+            gridLine(listOf("1", "2", "3", "4", "5")),
+            gridLine(listOf("C", "C", "E", "B", "C"), top = 80),
+        )
+
+        assertEquals("1 2 3 4 5\nC C E B C", TextFormat.rawText(listOf(page.text)))
+    }
+
+    /** Markdown gövdesinde ilk hücresi [firstCell] olan tablo satırının hücrelerini döner. */
+    private fun markdownRow(markdown: String, firstCell: String): List<String> {
+        val row = markdown.lines().firstOrNull { line ->
+            line.startsWith("|") && line.split('|').getOrNull(1)?.trim() == firstCell
+        } ?: error("Satır bulunamadı: $firstCell\n$markdown")
+        return row.split('|').drop(1).dropLast(1).map { it.trim() }
     }
 }

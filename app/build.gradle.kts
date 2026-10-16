@@ -13,8 +13,8 @@ android {
         applicationId = "com.scanpdf.ocr"
         minSdk = 24
         targetSdk = 36
-        versionCode = 2
-        versionName = "0.1.1"
+        versionCode = 3
+        versionName = "0.1.2"
     }
 
     androidResources {
@@ -100,6 +100,8 @@ dependencies {
     testImplementation(libs.junit)
     // Döndürülmüş sayfa koordinatlarını gerçek bir PDF ile doğrulamak için masaüstü PDFBox
     testImplementation(libs.pdfbox.desktop)
+    // Tablo okumayı gerçek Tesseract ile doğrulamak için Tess4J (yerel kütüphaneler paket içinde)
+    testImplementation(libs.tess4j)
     // Testler — cihaz üstü (instrumented) uçtan uca testler
     androidTestImplementation(libs.androidx.test.ext.junit)
     androidTestImplementation(libs.androidx.test.runner)

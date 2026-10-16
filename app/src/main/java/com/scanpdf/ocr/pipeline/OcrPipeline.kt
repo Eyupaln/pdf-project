@@ -9,6 +9,7 @@ import com.scanpdf.ocr.core.OcrOptions
 import com.scanpdf.ocr.core.OcrOutcome
 import com.scanpdf.ocr.core.OcrProgress
 import com.scanpdf.ocr.core.OcrStage
+import com.scanpdf.ocr.core.PageLayout
 import com.scanpdf.ocr.core.PageOcrResult
 import com.scanpdf.ocr.image.ImagePreprocessor
 import com.scanpdf.ocr.pdf.PdfFontProvider
@@ -16,6 +17,7 @@ import com.scanpdf.ocr.pdf.PdfRasterizer
 import com.scanpdf.ocr.pdf.PdfTextLayerWriter
 import com.scanpdf.ocr.text.TextExporter
 import com.scanpdf.ocr.text.TextFormat
+import com.scanpdf.ocr.text.WordLayout
 import com.tom_roush.pdfbox.pdmodel.PDDocument
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.NonCancellable
@@ -78,7 +80,6 @@ class OcrPipeline(private val context: Context) {
             // Sayfa metinleri iki biçimde kullanılır: `.txt` ham, `.md` başlıklı.
             val pageTexts = results.map { it.text }
             val fullText = TextFormat.rawText(pageTexts)
-
             // 4) Aranabilir PDF (görünmez metin katmanı) üret.
             val outputPdf: File? = if (options.writeTextLayer) {
                 onProgress(OcrProgress(OcrStage.WRITING, pageCount, pageCount, "Aranabilir PDF yazılıyor"))
@@ -96,7 +97,7 @@ class OcrPipeline(private val context: Context) {
             // 5) Çıktı dosyaları: ham metin (`.txt`) ve markdown (`.md`).
             //    İkisi birlikte yazılır; kullanıcı sonuç ekranından istediğini indirir.
             onProgress(OcrProgress(OcrStage.SAVING, pageCount, pageCount, "Metin kaydediliyor"))
-            val markdown = TextFormat.markdownText(displayName, pageTexts) { page ->
+            val markdown = TextFormat.markdownText(displayName, results) { page ->
                 context.getString(R.string.page_header, page)
             }
             val (textFile, markdownFile) = withContext(Dispatchers.IO) {
@@ -130,8 +131,9 @@ class OcrPipeline(private val context: Context) {
 
     /**
      * Tek bir sayfayı işler: rasterize, (istenirse) eşikleme ve eğim düzeltme,
-     * ardından OCR. Yalnızca ön işlemenin ürettiği ara bitmap'ler geri dönüştürülür;
-     * ham rasterize çıktısı korunur (aşağı akışta yeniden kullanılabilir).
+     * polarite normalizasyonu, ardından OCR. Yalnızca ön işlemenin ürettiği ara
+     * bitmap'ler geri dönüştürülür; ham rasterize çıktısı korunur (aşağı akışta
+     * yeniden kullanılabilir).
      */
     private fun recognizePage(
         pageIndex: Int,
@@ -165,8 +167,34 @@ class OcrPipeline(private val context: Context) {
         }
 
         try {
+            // Koyu zeminli bantları ters çevir: dönüşümlü polariteli sayfalarda
+            // Tesseract bir yarıyı hiç okumuyor (ölçüldü: 18 rakam ve 18 harfin
+            // tamamı kayıp). Koordinatlar değişmez.
+            val normalized = ImagePreprocessor.normalizePolarity(working)
+            if (normalized !== working) derived += normalized
+            working = normalized
+
             onProgress(OcrProgress(OcrStage.RECOGNIZING, pageIndex, pageCount))
-            val result = engine.recognize(pageIndex, working, rendered.effectiveDpi)
+            var result = engine.recognize(pageIndex, working, rendered.effectiveDpi, options.layout)
+
+            // Tablo/ızgara sayfalarında otomatik bölütleme sütun düşürüyor
+            // (ölçüldü: 18 sütunun 11'i). Tek blok modunu deneyip daha çok içerik
+            // okuyan sonucu koru.
+            if (options.layout == PageLayout.AUTO && WordLayout.looksTabular(result.lines)) {
+                onProgress(
+                    OcrProgress(
+                        OcrStage.RECOGNIZING,
+                        pageIndex,
+                        pageCount,
+                        context.getString(R.string.progress_table_retry),
+                    ),
+                )
+                val retry = engine.recognize(pageIndex, working, rendered.effectiveDpi, PageLayout.TABLE)
+                if (WordLayout.yieldScore(retry.lines) > WordLayout.yieldScore(result.lines)) {
+                    result = retry
+                }
+            }
+
             return if (appliedRotation == 0f) {
                 result
             } else {

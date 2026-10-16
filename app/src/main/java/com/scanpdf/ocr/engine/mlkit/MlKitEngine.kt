@@ -2,17 +2,18 @@ package com.scanpdf.ocr.engine.mlkit
 
 import android.content.Context
 import android.graphics.Bitmap
-import android.graphics.Rect
 import com.google.android.gms.tasks.Task
 import com.google.mlkit.vision.common.InputImage
 import com.google.mlkit.vision.text.Text
 import com.google.mlkit.vision.text.TextRecognition
 import com.google.mlkit.vision.text.TextRecognizer
 import com.google.mlkit.vision.text.latin.TextRecognizerOptions
+import com.scanpdf.ocr.core.Box
 import com.scanpdf.ocr.core.OcrEngine
 import com.scanpdf.ocr.core.OcrEngineKind
 import com.scanpdf.ocr.core.OcrLine
 import com.scanpdf.ocr.core.OcrWord
+import com.scanpdf.ocr.core.PageLayout
 import com.scanpdf.ocr.core.PageOcrResult
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.suspendCancellableCoroutine
@@ -38,7 +39,12 @@ class MlKitEngine(private val context: Context) : OcrEngine {
         recognizer = TextRecognition.getClient(TextRecognizerOptions.DEFAULT_OPTIONS)
     }
 
-    override fun recognize(pageIndex: Int, bitmap: Bitmap, renderDpi: Float): PageOcrResult {
+    override fun recognize(
+        pageIndex: Int,
+        bitmap: Bitmap,
+        renderDpi: Float,
+        layout: PageLayout,
+    ): PageOcrResult {
         val recognizer = recognizer ?: error("prepare() çağrılmadı")
 
         val image = InputImage.fromBitmap(bitmap, 0)
@@ -69,15 +75,16 @@ class MlKitEngine(private val context: Context) : OcrEngine {
     /** Bir [Text.Line]'ı element (kelime) düzeyinde [lines] listesine ekler. */
     private fun appendLine(lines: MutableList<OcrLine>, line: Text.Line) {
         val words = mutableListOf<OcrWord>()
-        var lineBox: Rect? = null
+        var lineBox: Box? = null
 
         for (element in line.elements) {
             val elementText = element.text.trim()
             if (elementText.isEmpty()) continue
-            val box = element.boundingBox ?: continue
+            val rect = element.boundingBox ?: continue
+            val box = Box(rect.left, rect.top, rect.right, rect.bottom)
             words += OcrWord(
                 text = elementText,
-                box = Rect(box),
+                box = box,
                 // ML Kit güveni 0..1 aralığındadır; Tesseract gibi 0..100'e ölçekle.
                 confidence = element.confidence * 100f,
             )
@@ -87,14 +94,15 @@ class MlKitEngine(private val context: Context) : OcrEngine {
         if (words.isEmpty()) {
             // Element yoksa kaybı önlemek için satırın kendi metni/kutusuyla tek kelime üret.
             val lineText = line.text.trim()
-            val lineRect = line.boundingBox
-            if (lineText.isNotEmpty() && lineRect != null) {
+            val lineBounds = line.boundingBox
+            if (lineText.isNotEmpty() && lineBounds != null) {
+                val box = Box(lineBounds.left, lineBounds.top, lineBounds.right, lineBounds.bottom)
                 val word = OcrWord(
                     text = lineText,
-                    box = Rect(lineRect),
+                    box = box,
                     confidence = line.confidence * 100f,
                 )
-                lines += OcrLine(listOf(word), Rect(lineRect))
+                lines += OcrLine(listOf(word), box)
             }
             return
         }
@@ -102,9 +110,8 @@ class MlKitEngine(private val context: Context) : OcrEngine {
         lines += OcrLine(words, lineBox ?: words.first().box)
     }
 
-    /** İki kutunun birleşimi; [a] null ise [b]'nin kopyasını döner. */
-    private fun union(a: Rect?, b: Rect): Rect =
-        if (a == null) Rect(b) else Rect(a).apply { union(b) }
+    /** İki kutunun birleşimi; [a] null ise [b] aynen döner. */
+    private fun union(a: Box?, b: Box): Box = if (a == null) b else a.union(b)
 }
 
 /** ML Kit [Task]'ini askıya alarak bekler; ek bağımlılık (play-services-tasks) gerekmez. */

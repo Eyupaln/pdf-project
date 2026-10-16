@@ -39,6 +39,7 @@ import com.scanpdf.ocr.R
 import com.scanpdf.ocr.core.OcrEngineKind
 import com.scanpdf.ocr.core.OcrOutcome
 import com.scanpdf.ocr.core.OcrProgress
+import com.scanpdf.ocr.core.PageLayout
 import com.scanpdf.ocr.core.PageOcrResult
 import java.util.Locale
 import kotlin.math.roundToInt
@@ -63,6 +64,7 @@ fun MainScreen(
     onStart: () -> Unit,
     onCancel: () -> Unit,
     onEngine: (OcrEngineKind) -> Unit,
+    onLayout: (PageLayout) -> Unit,
     onDpi: (Int) -> Unit,
     onPreprocess: (Boolean) -> Unit,
     onDeskew: (Boolean) -> Unit,
@@ -107,6 +109,7 @@ fun MainScreen(
                 )
             }
             item { EngineSection(state.engine, onEngine) }
+            item { LayoutSection(state.layout, onLayout) }
             item { DpiSection(state.dpi, onDpi) }
             item {
                 OptionsSection(
@@ -202,6 +205,39 @@ private fun EngineSection(engine: OcrEngineKind, onEngine: (OcrEngineKind) -> Un
             )
         }
     }
+}
+
+/** Sayfa düzeni (bölütleme) seçimi: tablo/ızgara sayfaları için tek blok modu. */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun LayoutSection(layout: PageLayout, onLayout: (PageLayout) -> Unit) {
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Text(stringResource(R.string.layout_label), style = MaterialTheme.typography.titleSmall)
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            LayoutChip(PageLayout.AUTO, layout, onLayout, R.string.layout_auto)
+            LayoutChip(PageLayout.TABLE, layout, onLayout, R.string.layout_table)
+        }
+        Text(
+            text = stringResource(R.string.layout_desc),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun LayoutChip(
+    value: PageLayout,
+    selected: PageLayout,
+    onSelect: (PageLayout) -> Unit,
+    labelRes: Int,
+) {
+    FilterChip(
+        selected = value == selected,
+        onClick = { onSelect(value) },
+        label = { Text(stringResource(labelRes)) },
+    )
 }
 
 @OptIn(ExperimentalMaterial3Api::class)

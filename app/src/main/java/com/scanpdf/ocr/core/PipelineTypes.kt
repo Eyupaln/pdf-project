@@ -2,6 +2,23 @@ package com.scanpdf.ocr.core
 
 import java.io.File
 
+/**
+ * Sayfa bölütleme (düzen) tercihi.
+ *
+ * Ölçüm (gerçek Tesseract 5.3.4, cevap anahtarı tablosu): varsayılan otomatik
+ * bölütleme ızgara satırlarının bir bölümünü düşürüyor (18 sütunun 11'i),
+ * tek blok modu tablonun tamamını okuyor. Bu yüzden "otomatik" mod, tablo gibi
+ * görünen sayfaları tek blok modunda yeniden dener ve daha çok içerik okuyan
+ * sonucu korur.
+ */
+enum class PageLayout {
+    /** Otomatik: tablo gibi görünen sayfalar tek blok modunda yeniden denenir. */
+    AUTO,
+
+    /** Tablo / ızgara: sayfa tek blok olarak okunur. */
+    TABLE,
+}
+
 /** Kullanıcının seçtiği işlem seçenekleri. */
 data class OcrOptions(
     val engine: OcrEngineKind = OcrEngineKind.TESSERACT,
@@ -15,6 +32,8 @@ data class OcrOptions(
     val deskew: Boolean = false,
     /** Aranabilir PDF üret (görünmez metin katmanı). */
     val writeTextLayer: Boolean = true,
+    /** Sayfa bölütleme tercihi (yalnızca Tesseract kullanır). */
+    val layout: PageLayout = PageLayout.AUTO,
 )
 
 enum class OcrStage(val label: String) {

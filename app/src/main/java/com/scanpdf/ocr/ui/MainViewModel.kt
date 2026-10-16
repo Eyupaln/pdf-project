@@ -8,6 +8,7 @@ import com.scanpdf.ocr.core.OcrEngineKind
 import com.scanpdf.ocr.core.OcrOptions
 import com.scanpdf.ocr.core.OcrOutcome
 import com.scanpdf.ocr.core.OcrProgress
+import com.scanpdf.ocr.core.PageLayout
 import com.scanpdf.ocr.pipeline.OcrPipeline
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -39,6 +40,7 @@ class MainViewModel : ViewModel() {
         val deskew: Boolean = false,
         val writeTextLayer: Boolean = true,
         val languages: List<String> = listOf("tur", "eng"),
+        val layout: PageLayout = PageLayout.AUTO,
     )
 
     private val _uiState = MutableStateFlow(UiState())
@@ -59,6 +61,8 @@ class MainViewModel : ViewModel() {
 
     fun setLanguages(languages: List<String>) = _uiState.update { it.copy(languages = languages) }
 
+    fun setLayout(layout: PageLayout) = _uiState.update { it.copy(layout = layout) }
+
     /**
      * Seçilen PDF için işlem hattını başlatır. Devam eden bir iş varsa yenisini
      * başlatmaz. [onProgress] geri çağrısı arka plan iş parçacığından gelir;
@@ -76,6 +80,7 @@ class MainViewModel : ViewModel() {
                 preprocess = snapshot.preprocess,
                 deskew = snapshot.deskew,
                 writeTextLayer = snapshot.writeTextLayer,
+                layout = snapshot.layout,
             )
         }
 

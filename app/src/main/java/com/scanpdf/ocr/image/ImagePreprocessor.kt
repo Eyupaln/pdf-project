@@ -15,9 +15,10 @@ import kotlin.math.abs
  *
  * Koordinat davranışı:
  *  - [binarize] **koordinatları değiştirmez** (yalnızca piksel değerleri).
+ *  - [normalizePolarity] **koordinatları değiştirmez** (yalnızca piksel değerleri).
  *  - [detectSkew] yalnızca ölçüm yapar; koordinatları değiştirmez.
  *  - [deskew] ve [rotate] **koordinatları değiştirir**; çağıran, döndürülen
- *    görüntü boyutuna göre kutuları telafi etmelidir (bkz. `Rect.rotateAboutCenter`).
+ *    görüntü boyutuna göre kutuları telafi etmelidir (bkz. `Box.rotateAboutCenter`).
  *
  * Tüm Leptonica `Pix` nesneleri `try/finally` içinde geri dönüştürülür.
  */
@@ -28,6 +29,9 @@ object ImagePreprocessor {
     /** Bu aralığın altındaki açı önemsiz, üstündeki açı tespit hatası sayılır. */
     private const val MIN_DESKEW_DEGREES = 0.3f
     private const val MAX_DESKEW_DEGREES = 10f
+
+    /** Polarite örneklemesinde küçültülen görüntünün en fazla genişliği (piksel). */
+    internal const val POLARITY_SAMPLE_WIDTH = 600
 
     /**
      * Belge görüntüleri için Otsu'ya göre daha dayanıklı, yerel (Sauvola)
@@ -48,6 +52,61 @@ object ImagePreprocessor {
         } finally {
             output?.recycle()
             input?.recycle()
+        }
+    }
+
+    /**
+     * Sayfadaki koyu zeminli bantları **yerinde** ters çevirir; böylece tüm yazı
+     * "koyu yazı / açık zemin" polaritesine gelir.
+     *
+     * Ölçümle doğrulandı (bkz. [PolarityBands]): Tesseract polarite kararını
+     * sayfanın tamamı için verdiğinden, cevap anahtarı gibi satırları dönüşümlü
+     * sayfalarda koyu bant üzerindeki yazı hiç okunmuyordu. Bantları ters çevirmek
+     * tek polariteli bir sayfa üretir ve içeriğin tamamı okunur.
+     *
+     * Bant yoksa [src] aynen döner. **Koordinatlar değişmez**; yalnızca piksel
+     * değerleri değişir, bu yüzden kelime kutuları için telafi gerekmez.
+     */
+    fun normalizePolarity(src: Bitmap): Bitmap {
+        val width = src.width
+        val height = src.height
+        if (width <= 0 || height <= 0) return src
+
+        return try {
+            // 1) Küçük ölçekte satır koyu oranları: bant tespiti için yeter, hızlı.
+            val step = maxOf(1, width / POLARITY_SAMPLE_WIDTH)
+            val sampled = Bitmap.createScaledBitmap(
+                src,
+                maxOf(1, width / step),
+                maxOf(1, height / step),
+                false,
+            )
+            val bands = try {
+                val sw = sampled.width
+                val sh = sampled.height
+                val pixels = IntArray(sw * sh)
+                sampled.getPixels(pixels, 0, sw, 0, 0, sw, sh)
+                PolarityBands.bands(PolarityBands.rowDarkFractions(pixels, sw, sh))
+            } finally {
+                if (sampled !== src && !sampled.isRecycled) sampled.recycle()
+            }
+            if (bands.isEmpty()) return src
+
+            // 2) Tam çözünürlükte yalnızca bant satırlarını ters çevir.
+            val copy = src.copy(Bitmap.Config.ARGB_8888, true) ?: return src
+            for (band in bands) {
+                val top = (band.first * step).coerceIn(0, copy.height - 1)
+                val bottom = (((band.last + 1) * step) - 1).coerceIn(top, copy.height - 1)
+                val rows = bottom - top + 1
+                val pixels = IntArray(copy.width * rows)
+                copy.getPixels(pixels, 0, copy.width, 0, top, copy.width, rows)
+                PolarityBands.invertRows(pixels, copy.width, listOf(0 until rows))
+                copy.setPixels(pixels, 0, copy.width, 0, top, copy.width, rows)
+            }
+            copy
+        } catch (e: Exception) {
+            Log.w(TAG, "Polarite normalizasyonu başarısız; görüntü değiştirilmedi.", e)
+            src
         }
     }
 

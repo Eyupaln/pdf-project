@@ -2,13 +2,14 @@ package com.scanpdf.ocr.engine.tesseract
 
 import android.content.Context
 import android.graphics.Bitmap
-import android.graphics.Rect
 import com.googlecode.tesseract.android.ResultIterator
 import com.googlecode.tesseract.android.TessBaseAPI
+import com.scanpdf.ocr.core.Box
 import com.scanpdf.ocr.core.OcrEngine
 import com.scanpdf.ocr.core.OcrEngineKind
 import com.scanpdf.ocr.core.OcrLine
 import com.scanpdf.ocr.core.OcrWord
+import com.scanpdf.ocr.core.PageLayout
 import com.scanpdf.ocr.core.PageOcrResult
 
 /**
@@ -48,13 +49,19 @@ class TesseractEngine(private val context: Context) : OcrEngine {
         preparedLanguages = resolved
     }
 
-    override fun recognize(pageIndex: Int, bitmap: Bitmap, renderDpi: Float): PageOcrResult {
+    override fun recognize(
+        pageIndex: Int,
+        bitmap: Bitmap,
+        renderDpi: Float,
+        layout: PageLayout,
+    ): PageOcrResult {
         val api = api ?: error("prepare() çağrılmadı")
 
         // Bitmap verildiğinde Tesseract DPI bilmezse 70 DPI varsayar ve kalite
         // çöker; en az 150 DPI bildir.
         val dpi = maxOf(renderDpi.toInt(), MIN_DPI)
         api.setVariable("user_defined_dpi", dpi.toString())
+        api.setPageSegMode(pageSegMode(layout))
         api.setImage(bitmap)
 
         // getUTF8Text() tanımayı tetikler; metni kullanmasak da çağrılmalı.
@@ -66,7 +73,7 @@ class TesseractEngine(private val context: Context) : OcrEngine {
 
         try {
             val lineWords = mutableListOf<OcrWord>()
-            var lineBox: Rect? = null
+            var lineBox: Box? = null
 
             fun flushLine() {
                 if (lineWords.isNotEmpty()) {
@@ -117,15 +124,22 @@ class TesseractEngine(private val context: Context) : OcrEngine {
     }
 
     /** Kelimenin sınırlayıcı kutusu; `getBoundingRect` yoksa `getBoundingBox`'tan kurar. */
-    private fun boundingRect(iterator: ResultIterator, level: Int): Rect? {
-        iterator.getBoundingRect(level)?.let { return Rect(it) }
+    private fun boundingRect(iterator: ResultIterator, level: Int): Box? {
+        iterator.getBoundingRect(level)?.let { return Box(it.left, it.top, it.right, it.bottom) }
         val box = iterator.getBoundingBox(level) ?: return null
-        return if (box.size >= 4) Rect(box[0], box[1], box[2], box[3]) else null
+        return if (box.size >= 4) Box(box[0], box[1], box[2], box[3]) else null
     }
 
     /** İki kutunun birleşimi; [a] null ise [b]'nin kopyasını döner. */
-    private fun union(a: Rect?, b: Rect): Rect =
-        if (a == null) Rect(b) else Rect(a).apply { union(b) }
+    private fun union(a: Box?, b: Box): Box = if (a == null) b else a.union(b)
+
+    /** Sayfa bölütleme tercihini Tesseract PSM sabitine eşler. */
+    private fun pageSegMode(layout: PageLayout): Int = when (layout) {
+        // Ölçüm: otomatik bölütleme ızgara satırlarında sütun düşürüyor (18'in 11'i);
+        // tek blok modu tablonun tamamını okuyor.
+        PageLayout.AUTO -> TessBaseAPI.PageSegMode.PSM_AUTO
+        PageLayout.TABLE -> TessBaseAPI.PageSegMode.PSM_SINGLE_BLOCK
+    }
 
     private fun emptyResult(pageIndex: Int, bitmap: Bitmap, renderDpi: Float): PageOcrResult =
         PageOcrResult(

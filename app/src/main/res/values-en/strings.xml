@@ -17,6 +17,12 @@
     <string name="engine_mlkit_warning">ML Kit supports Latin script only; language selection is ignored.</string>
     <string name="languages_value">Turkish + English</string>
 
+    <!-- Page layout (segmentation) -->
+    <string name="layout_label">Page layout</string>
+    <string name="layout_auto">Automatic</string>
+    <string name="layout_table">Table</string>
+    <string name="layout_desc">Automatic: pages that look like tables are re-read as a single block. Table: force single-block reading for grid pages.</string>
+
     <!-- Settings -->
     <string name="dpi_value">Resolution: %1$d DPI</string>
     <string name="preprocess_switch">Preprocessing (binarize)</string>
@@ -25,6 +31,7 @@
 
     <!-- Progress -->
     <string name="progress_page">Page %1$d / %2$d</string>
+    <string name="progress_table_retry">Retrying table layout</string>
 
     <!-- Results and output files -->
     <string name="result_title">Results</string>

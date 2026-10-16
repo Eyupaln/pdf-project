@@ -51,6 +51,7 @@ class MainActivity : ComponentActivity() {
                     },
                     onCancel = viewModel::cancel,
                     onEngine = viewModel::setEngine,
+                    onLayout = viewModel::setLayout,
                     onDpi = viewModel::setDpi,
                     onPreprocess = viewModel::setPreprocess,
                     onDeskew = viewModel::setDeskew,

@@ -1,6 +1,5 @@
 package com.scanpdf.ocr.core
 
-import android.graphics.Rect
 import com.scanpdf.ocr.text.TextFormat
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
@@ -76,7 +75,7 @@ class PipelineTypesTest {
     @Test
     fun `sonuc ozeti sayfa metnini ve cikti dosyalarini tasir`() {
         val pages = listOf(
-            PageOcrResult(0, 10, 10, 300f, listOf(OcrLine(listOf(OcrWord("a", Rect(), 50f)), Rect()))),
+            PageOcrResult(0, 10, 10, 300f, listOf(OcrLine(listOf(OcrWord("a", Box.EMPTY, 50f)), Box.EMPTY))),
         )
         val textFile = File("deneme-metin.txt")
         val markdownFile = File("deneme-metin.md")
